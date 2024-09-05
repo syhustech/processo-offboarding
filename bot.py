@@ -21,6 +21,19 @@ folder_id = '0Bxf69KA29_sEfk1keGxTSE4zeVpKMmVZUkFzcnVpNi1LM3FGMjZGN3VjU2ttOVFfek
 folder_name = ''
 query = f"parents = '{folder_id}' and name = '{folder_name}'"
 
+def check_if_active_or_not(query):
+    global folder_id
+    response = service.files().list(q = query).execute()
+    files = response.get('files')
+
+    if files != []:
+        df = pd.DataFrame(files)
+        folder_id = df['id'][0]
+    else:
+        folder_id = '0Bxf69KA29_sELTBBZkoycjdlWnc'
+        query = f"parents = '{folder_id}' and name = '{folder_name}'"
+        find_drive_folder_id(query)
+
 def find_drive_folder_id(query):
     global folder_id
     response = service.files().list(q = query).execute()
@@ -48,54 +61,53 @@ def save_pdf_mensal(empresa, mes, ano, fechamento):
     file_name = f'{empresa} - {ano} - {mes} - {fechamento}'
 
     bot.type_keys(['ctrl', 'd'])
-    if not bot.find( "area_de_trabalho", matching=0.9, waiting_time=6000000):
-        not_found("area_de_trabalho")
-    bot.click()
-    if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
-        not_found("fechamento")
-    bot.double_click()
-    bot.type_keys(['alt', 'n'])
-    bot.type_key(file_name)
-
-    if bot.find("salvar", matching=0.9, waiting_time=20000):
+    bot.wait(2000)
+    if bot.find( "area_de_trabalho", matching=0.9, waiting_time=1000000):
         bot.click()
-    if bot.find("pdf_open", matching=0.9, waiting_time=1200000):
-        bot.alt_f4()
+        if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
+            not_found("fechamento")
+        bot.double_click()
+        bot.type_keys(['alt', 'n'])
+        bot.type_key(file_name)
+        if bot.find("salvar", matching=0.9, waiting_time=20000):
+            bot.click()
+        if bot.find("pdf_open", matching=0.9, waiting_time=1200000):
+            bot.alt_f4()
 
 def save_pdf_anual(empresa, ano, fechamento):
     file_name = f'{empresa} - {ano} - {fechamento}'
 
     bot.type_keys(['ctrl', 'd'])
-    if not bot.find( "area_de_trabalho", matching=0.9, waiting_time=30000):
-        not_found("area_de_trabalho")
-    bot.click()
-    if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
-        not_found("fechamento")
-    bot.double_click()
-    bot.type_keys(['alt', 'n'])
-    bot.type_key(file_name)
-    if bot.find("salvar", matching=0.9, waiting_time=20000):
+    bot.wait(2000)
+    if bot.find( "area_de_trabalho", matching=0.9, waiting_time=30000):
         bot.click()
-    if bot.find("pdf_open", matching=0.9, waiting_time=200000):
-        bot.alt_f4()
+        if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
+            not_found("fechamento")
+        bot.double_click()
+        bot.type_keys(['alt', 'n'])
+        bot.type_key(file_name)
+        if bot.find("salvar", matching=0.9, waiting_time=20000):
+            bot.click()
+        if bot.find("pdf_open", matching=0.9, waiting_time=200000):
+            bot.alt_f4()
 
 def save_excel(empresa, mes, ano, fechamento):
     file_name = f'{empresa} - {ano} - {mes} - {fechamento}'
 
     if bot.find("salvar_excel", matching=0.9, waiting_time=10000):
         bot.click()
-    if not bot.find( "area_de_trabalho", matching=0.9, waiting_time=6000000):
-        not_found("area_de_trabalho")
-    bot.click()
-    if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
-        not_found("fechamento")
-    bot.double_click()
-    bot.type_keys(['alt', 'n'])
-    bot.type_key(file_name)
-    if bot.find("salvar", matching=0.9, waiting_time=20000):
+    bot.wait(2000)
+    if bot.find( "area_de_trabalho", matching=0.9, waiting_time=6000000):
         bot.click()
-    if bot.find("excel_open", matching=0.9, waiting_time=2000000):
-        bot.alt_f4()
+        if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
+            not_found("fechamento")
+        bot.double_click()
+        bot.type_keys(['alt', 'n'])
+        bot.type_key(file_name)
+        if bot.find("salvar", matching=0.9, waiting_time=20000):
+            bot.click()
+        if bot.find("excel_open", matching=0.9, waiting_time=2000000):
+            bot.alt_f4()
 
 def main():
     global folder_name
@@ -138,12 +150,12 @@ def main():
                 bot.enter()
                 bot.wait(10000)
 
-            if row['Consolidar'] == 'Sim':
-                bot.type_keys(['alt', 'c'])
-                bot.type_key('v')
-                bot.wait(2000)
-                bot.type_keys(['alt', 's'])
-                bot.type_keys(['alt', 'o'])
+                if row['Consolidar'] == 'Sim':
+                    bot.type_keys(['alt', 'c'])
+                    bot.type_key('v')
+                    bot.wait(2000)
+                    bot.type_keys(['alt', 's'])
+                    bot.type_keys(['alt', 'o'])
 
             if row['Relatório'] == 'Offboarding Anual':
                 bot.type_keys(['alt', 'r'])
@@ -157,6 +169,8 @@ def main():
                 bot.type_keys(['alt', 'o'])
                 if bot.find("ativo_diferente", matching=0.9, waiting_time=40000):
                     bot.enter()
+                while bot.find( "processando", matching=0.9, waiting_time=5000):
+                    bot.wait(1000)
                 if bot.find("balanco", matching=0.9, waiting_time=10000):
                     save_pdf_anual(empresa, ano, 'Balanço')
                     bot.key_esc()
@@ -177,18 +191,19 @@ def main():
 
                 bot.type_keys(['alt', 'o'])
 
-                if bot.find("dre", matching=0.9, waiting_time=50000):
+                while bot.find( "processando", matching=0.9, waiting_time=5000):
+                    bot.wait(1000)
+                if bot.find("dre", matching=0.9, waiting_time=20000):
                     save_pdf_anual(empresa, ano, 'DRE')
                     bot.key_esc()
-                elif bot.find("dre-2", matching=0.9, waiting_time=30000):
+                elif bot.find("dre-2", matching=0.9, waiting_time=20000):
                     save_pdf_anual(empresa, ano, 'DRE')
                     bot.key_esc()
                 bot.key_esc()
 
-                folder_id = '0Bxf69KA29_sELTBBZkoycjdlWnc'
                 folder_name = f'Syhus - {empresa}'
                 query = f"parents = '{folder_id}' and name = '{folder_name}'"
-                find_drive_folder_id(query)
+                check_if_active_or_not(query)
                 folder_name = 'Contabilidade'
                 query = f"parents = '{folder_id}' and name = '{folder_name}'"
                 find_drive_folder_id(query)
@@ -215,7 +230,9 @@ def main():
                     bot.click()
 
                 bot.type_keys(['alt', 'o'])
-                if bot.find("balancete", matching=0.9, waiting_time=30000):
+                while bot.find( "processando", matching=0.9, waiting_time=5000):
+                    bot.wait(1000)
+                if bot.find("balancete", matching=0.9, waiting_time=10000):
                     save_pdf_mensal(empresa, mes, ano, 'Balancete Mensal')
                     save_excel(empresa, mes, ano, 'Balancete Mensal')
                     bot.key_esc()
@@ -223,7 +240,9 @@ def main():
                 bot.tab()
                 bot.type_key(f'0101{ano}')
                 bot.type_keys(['alt', 'o'])
-                if bot.find("balancete", matching=0.9, waiting_time=30000):
+                while bot.find( "processando", matching=0.9, waiting_time=5000):
+                    bot.wait(1000)
+                if bot.find("balancete", matching=0.9, waiting_time=10000):
                     save_pdf_mensal(empresa, mes, ano, 'Balancete Acumulado')
                     save_excel(empresa, mes, ano, 'Balancete Acumulado')
                     bot.key_esc()
@@ -240,23 +259,26 @@ def main():
                 bot.type_key(data_final)
 
                 bot.type_keys(['alt', 'o'])
-
-                if bot.find("dre", matching=0.9, waiting_time=30000):
+                while bot.find( "processando", matching=0.9, waiting_time=5000):
+                    bot.wait(1000)
+                if bot.find("dre", matching=0.9, waiting_time=10000):
                     save_pdf_mensal(empresa, mes, ano, 'DRE Mensal')
                     save_excel(empresa, mes, ano, 'DRE Mensal')
                     bot.key_esc()
-                elif bot.find("dre-2", matching=0.9, waiting_time=30000):
+                elif bot.find("dre-2", matching=0.9, waiting_time=10000):
                     save_pdf_mensal(empresa, mes, ano, 'DRE Mensal')
                     save_excel(empresa, mes, ano, 'DRE Mensal')
                     bot.key_esc()
                 bot.wait(1000)
                 bot.type_key(f'0101{ano}')
                 bot.type_keys(['alt', 'o'])
-                if bot.find("dre", matching=0.9, waiting_time=30000):
+                while bot.find( "processando", matching=0.9, waiting_time=5000):
+                    bot.wait(1000)
+                if bot.find("dre", matching=0.9, waiting_time=10000):
                     save_pdf_mensal(empresa, mes, ano, 'DRE Acumulado')
                     save_excel(empresa, mes, ano, 'DRE Acumulado')
                     bot.key_esc()
-                elif bot.find("dre-2", matching=0.9, waiting_time=30000):
+                elif bot.find("dre-2", matching=0.9, waiting_time=10000):
                     save_pdf_mensal(empresa, mes, ano, 'DRE Acumulado')
                     save_excel(empresa, mes, ano, 'DRE Acumulado')
                     bot.key_esc()
@@ -271,17 +293,17 @@ def main():
                 bot.type_key(data_final)
 
                 bot.type_keys(['alt', 'o'])
-
-                if bot.find("razao", matching=0.9, waiting_time=12000000):
+                while bot.find( "processando", matching=0.9, waiting_time=5000):
+                    bot.wait(1000)
+                if bot.find("razao", matching=0.9, waiting_time=120000):
                     save_pdf_mensal(empresa, mes, ano, 'Razão')
                     save_excel(empresa, mes, ano, 'Razão')
                     bot.key_esc()
                 bot.key_esc()
 
-                folder_id = '0Bxf69KA29_sELTBBZkoycjdlWnc'
                 folder_name = f'Syhus - {empresa}'
                 query = f"parents = '{folder_id}' and name = '{folder_name}'"
-                find_drive_folder_id(query)
+                check_if_active_or_not(query)
                 folder_name = 'Contabilidade'
                 query = f"parents = '{folder_id}' and name = '{folder_name}'"
                 find_drive_folder_id(query)

@@ -61,7 +61,9 @@ def save_pdf_mensal(empresa, mes, ano, fechamento):
     file_name = f'{empresa} - {ano} - {mes} - {fechamento}'
 
     bot.type_keys(['ctrl', 'd'])
-    bot.wait(2000)
+    if bot.find('erro', matching=0.8, waiting_time=5000):
+        bot.enter()
+        bot.wait(1000)
     if bot.find( "area_de_trabalho", matching=0.9, waiting_time=1000000):
         bot.click()
         if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
@@ -71,14 +73,16 @@ def save_pdf_mensal(empresa, mes, ano, fechamento):
         bot.type_key(file_name)
         if bot.find("salvar", matching=0.9, waiting_time=20000):
             bot.click()
-        if bot.find("pdf_open", matching=0.9, waiting_time=1200000):
-            bot.alt_f4()
+        while bot.find( "gerando_pdfs", matching=0.9, waiting_time=8000):
+            bot.wait(1000)
 
 def save_pdf_anual(empresa, ano, fechamento):
     file_name = f'{empresa} - {ano} - {fechamento}'
 
     bot.type_keys(['ctrl', 'd'])
-    bot.wait(2000)
+    if bot.find('erro', matching=0.8, waiting_time=5000):
+        bot.enter()
+        bot.wait(1000)
     if bot.find( "area_de_trabalho", matching=0.9, waiting_time=30000):
         bot.click()
         if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
@@ -88,15 +92,17 @@ def save_pdf_anual(empresa, ano, fechamento):
         bot.type_key(file_name)
         if bot.find("salvar", matching=0.9, waiting_time=20000):
             bot.click()
-        if bot.find("pdf_open", matching=0.9, waiting_time=200000):
-            bot.alt_f4()
+        while bot.find( "gerando_pdfs", matching=0.9, waiting_time=8000):
+            bot.wait(1000)
 
 def save_excel(empresa, mes, ano, fechamento):
-    file_name = f'{empresa} - {ano} - {mes} - {fechamento}'
+    file_name = f'{empresa} - {ano} - {mes} - {fechamento}.xlsx'
 
     if bot.find("salvar_excel", matching=0.9, waiting_time=10000):
         bot.click()
-    bot.wait(2000)
+    if bot.find('erro', matching=0.8, waiting_time=5000):
+        bot.enter()
+        bot.wait(1000)
     if bot.find( "area_de_trabalho", matching=0.9, waiting_time=6000000):
         bot.click()
         if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
@@ -321,9 +327,6 @@ def main():
                 find_drive_folder_id(query)
 
             for file_name in os.listdir(folder_path):
-                if file_name.endswith('.xls'):
-                    file_name = f'{file_name[:-4]}.xlsx'
-                    os.rename(f'{folder_path}/{file_name[:-5]}.xls', f'{folder_path}/{file_name}')
                 if file_name.endswith('.pdf'):
                     file_metadata = {
                         'name': file_name,

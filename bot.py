@@ -121,7 +121,7 @@ def main():
 
     check_empresa = ''
     gc = gspread.service_account(filename='./service_account.json')
-    sh = gc.open("Processos Fiscal/Contabil")
+    sh = gc.open("Processos Fiscal e Contabil | Robô")
     worksheet = sh.get_worksheet(5)
     df = pd.DataFrame(worksheet.get_all_records())
     filtered_df = df.query("Processado != 's'")

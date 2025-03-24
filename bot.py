@@ -59,22 +59,30 @@ def create_folder():
 
 def save_pdf_mensal(empresa, mes, ano, fechamento):
     file_name = f'{empresa} - {ano} - {mes} - {fechamento}'
+    tempo = 20000
+    if fechamento == 'Razão':
+        tempo = 50000
 
     bot.type_keys(['ctrl', 'd'])
-    if bot.find('erro', matching=0.8, waiting_time=5000):
-        bot.enter()
-        bot.wait(1000)
-    if bot.find( "area_de_trabalho", matching=0.9, waiting_time=1000000):
-        bot.click()
-        if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
-            not_found("fechamento")
-        bot.double_click()
-        bot.type_keys(['alt', 'n'])
-        bot.type_key(file_name)
-        if bot.find("salvar", matching=0.9, waiting_time=20000):
-            bot.click()
-        while bot.find( "gerando_pdfs", matching=0.9, waiting_time=8000):
+    if fechamento == 'Razão':
+        if bot.find('erro', matching=0.8, waiting_time=30000):
+            bot.enter()
             bot.wait(1000)
+    else:
+        if bot.find('erro', matching=0.8, waiting_time=5000):
+            bot.enter()
+            bot.wait(1000)
+    bot.type_key(file_name)
+    if bot.find( "area_de_trabalho", matching=0.9, waiting_time=300000):
+        bot.click()
+    if bot.find( "fechamento", matching=0.9, waiting_time=10000):
+        bot.double_click()
+    if bot.find("salvar", matching=0.9, waiting_time=20000):
+        bot.click()
+    bot.wait(tempo)
+    while bot.find( "gerando_pdfs", matching=0.9, waiting_time=10000):
+        bot.wait(1000)
+    bot.wait(2000)
 
 def save_pdf_anual(empresa, ano, fechamento):
     file_name = f'{empresa} - {ano} - {fechamento}'
@@ -83,37 +91,36 @@ def save_pdf_anual(empresa, ano, fechamento):
     if bot.find('erro', matching=0.8, waiting_time=5000):
         bot.enter()
         bot.wait(1000)
+    bot.type_key(file_name)
     if bot.find( "area_de_trabalho", matching=0.9, waiting_time=30000):
         bot.click()
-        if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
-            not_found("fechamento")
+    if bot.find( "fechamento", matching=0.9, waiting_time=10000):
         bot.double_click()
-        bot.type_keys(['alt', 'n'])
-        bot.type_key(file_name)
-        if bot.find("salvar", matching=0.9, waiting_time=20000):
-            bot.click()
-        while bot.find( "gerando_pdfs", matching=0.9, waiting_time=8000):
-            bot.wait(1000)
+    if bot.find("salvar", matching=0.9, waiting_time=20000):
+        bot.click()
+    while bot.find( "gerando_pdfs", matching=0.9, waiting_time=10000):
+        bot.wait(1000)
+    bot.wait(2000)
 
 def save_excel(empresa, mes, ano, fechamento):
     file_name = f'{empresa} - {ano} - {mes} - {fechamento}.xlsx'
 
     if bot.find("salvar_excel", matching=0.9, waiting_time=10000):
         bot.click()
-    if bot.find('erro', matching=0.8, waiting_time=5000):
+    if bot.find('erro', matching=0.8, waiting_time=15000):
         bot.enter()
         bot.wait(1000)
-    if bot.find( "area_de_trabalho", matching=0.9, waiting_time=6000000):
+    bot.type_key(file_name)
+    if bot.find( "area_de_trabalho", matching=0.9, waiting_time=300000):
         bot.click()
-        if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
-            not_found("fechamento")
-        bot.double_click()
-        bot.type_keys(['alt', 'n'])
-        bot.type_key(file_name)
-        if bot.find("salvar", matching=0.9, waiting_time=20000):
-            bot.click()
-        if bot.find("excel_open", matching=0.9, waiting_time=2000000):
-            bot.alt_f4()
+    if not bot.find( "fechamento", matching=0.9, waiting_time=10000):
+        not_found("fechamento")
+    bot.double_click()
+    if bot.find("salvar", matching=0.9, waiting_time=20000):
+        bot.click()
+    if bot.find("excel_open", matching=0.9, waiting_time=2000000):
+        bot.alt_f4()
+    bot.wait(2000)
 
 def main():
     global folder_name
@@ -122,11 +129,18 @@ def main():
     check_empresa = ''
     gc = gspread.service_account(filename='./service_account.json')
     sh = gc.open("Processo Fiscal e Contabil | Robô")
-    worksheet = sh.get_worksheet(5)
+    worksheet = sh.get_worksheet(6)
     df = pd.DataFrame(worksheet.get_all_records())
     filtered_df = df.query("Processado != 's'")
+    folder_path = "C:/Users/robo/Desktop/Fechamento"
     print(filtered_df)
 
+    if not filtered_df.empty:
+        docs = [f for f in os.listdir(folder_path)]
+
+        for doc in docs:
+            if os.path.isfile(f"{folder_path}/{doc}"):
+                os.remove(f"{folder_path}/{doc}")
     if not filtered_df.empty:
         os.startfile('C:/Contabil/contabil.exe', arguments='/contabilidade')
 
@@ -137,7 +151,6 @@ def main():
             bot.wait(40000)
 
         for index, row in filtered_df.iterrows():
-            folder_path = "C:/Users/robo01/Desktop/Fechamento"
             codigo_empresa = row['Cód Cliente']
             empresa = row['Nome (NÃO PREENCHER)']
             data_inicial = row['Data Inicial (dd/mm/aaaa)'].replace('/','')
@@ -183,8 +196,7 @@ def main():
                 elif bot.find("balanco-2", matching=0.9, waiting_time=10000):
                     save_pdf_anual(empresa, ano, 'Balanço')
                     bot.key_esc()
-                if not bot.find("aba_balanco", matching=0.9, waiting_time=10000):
-                    not_found("aba_balanco")
+                bot.wait(2000)
                 bot.key_esc()
 
                 bot.type_keys(['alt', 'r'])
@@ -224,6 +236,21 @@ def main():
                 find_drive_folder_id(query)
             elif row['Relatório'] == 'Offboarding Mensal':
                 bot.type_keys(['alt', 'r'])
+                bot.type_key('r')
+
+                bot.tab()
+                bot.type_key(data_inicial)
+                bot.tab()
+                bot.type_key(data_final)
+
+                bot.type_keys(['alt', 'o'])
+                if bot.find("razao", matching=0.9, waiting_time=600000):
+                    save_pdf_mensal(empresa, mes, ano, 'Razão')
+                    save_excel(empresa, mes, ano, 'Razão')
+                    bot.key_esc()
+                bot.key_esc()
+
+                bot.type_keys(['alt', 'r'])
                 bot.type_key('b')
                 bot.enter()
 
@@ -236,9 +263,7 @@ def main():
                     bot.click()
 
                 bot.type_keys(['alt', 'o'])
-                while bot.find( "processando", matching=0.9, waiting_time=5000):
-                    bot.wait(1000)
-                if bot.find("balancete", matching=0.9, waiting_time=10000):
+                if bot.find("balancete", matching=0.9, waiting_time=30000):
                     save_pdf_mensal(empresa, mes, ano, 'Balancete Mensal')
                     save_excel(empresa, mes, ano, 'Balancete Mensal')
                     bot.key_esc()
@@ -246,14 +271,11 @@ def main():
                 bot.tab()
                 bot.type_key(f'0101{ano}')
                 bot.type_keys(['alt', 'o'])
-                while bot.find( "processando", matching=0.9, waiting_time=5000):
-                    bot.wait(1000)
-                if bot.find("balancete", matching=0.9, waiting_time=10000):
+                if bot.find("balancete", matching=0.9, waiting_time=30000):
                     save_pdf_mensal(empresa, mes, ano, 'Balancete Acumulado')
                     save_excel(empresa, mes, ano, 'Balancete Acumulado')
                     bot.key_esc()
-                if bot.find("aba_balancete", matching=0.9, waiting_time=15000):
-                    not_found("aba_balancete")
+                bot.wait(2000)
                 bot.key_esc()
 
                 bot.type_keys(['alt', 'r'])
@@ -265,9 +287,7 @@ def main():
                 bot.type_key(data_final)
 
                 bot.type_keys(['alt', 'o'])
-                while bot.find( "processando", matching=0.9, waiting_time=5000):
-                    bot.wait(1000)
-                if bot.find("dre", matching=0.9, waiting_time=10000):
+                if bot.find("dre", matching=0.9, waiting_time=30000):
                     save_pdf_mensal(empresa, mes, ano, 'DRE Mensal')
                     save_excel(empresa, mes, ano, 'DRE Mensal')
                     bot.key_esc()
@@ -278,32 +298,13 @@ def main():
                 bot.wait(1000)
                 bot.type_key(f'0101{ano}')
                 bot.type_keys(['alt', 'o'])
-                while bot.find( "processando", matching=0.9, waiting_time=5000):
-                    bot.wait(1000)
-                if bot.find("dre", matching=0.9, waiting_time=10000):
+                if bot.find("dre", matching=0.9, waiting_time=30000):
                     save_pdf_mensal(empresa, mes, ano, 'DRE Acumulado')
                     save_excel(empresa, mes, ano, 'DRE Acumulado')
                     bot.key_esc()
                 elif bot.find("dre-2", matching=0.9, waiting_time=10000):
                     save_pdf_mensal(empresa, mes, ano, 'DRE Acumulado')
                     save_excel(empresa, mes, ano, 'DRE Acumulado')
-                    bot.key_esc()
-                bot.key_esc()
-
-                bot.type_keys(['alt', 'r'])
-                bot.type_key('r')
-
-                bot.tab()
-                bot.type_key(data_inicial)
-                bot.tab()
-                bot.type_key(data_final)
-
-                bot.type_keys(['alt', 'o'])
-                while bot.find( "processando", matching=0.9, waiting_time=5000):
-                    bot.wait(1000)
-                if bot.find("razao", matching=0.9, waiting_time=120000):
-                    save_pdf_mensal(empresa, mes, ano, 'Razão')
-                    save_excel(empresa, mes, ano, 'Razão')
                     bot.key_esc()
                 bot.key_esc()
 

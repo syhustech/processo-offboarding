@@ -1,0 +1,4 @@
+botcity-framework-core
+pandas
+gspread
+google-api-python-client
